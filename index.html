@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Instagram Video Downloader – Save Reels and Videos Free</title>
+<meta name="description" content="Paste an Instagram reel or video link and download it as MP4. Free, no login, works on phone and desktop.">
+<style>
+:root{--bg:#f6f2fb;--ink:#1f1633;--muted:#6a6080;--card:#fff;--line:#ddd3ee;--accent:#6a2cff;--accent-ink:#fff;--err:#b3261e}
+@media (prefers-color-scheme:dark){:root{--bg:#14101f;--ink:#f1ecfa;--muted:#a69cbd;--card:#1d1830;--line:#352c52;--accent:#9b7bff;--accent-ink:#14101f;--err:#ff8a80}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.6 "Bricolage Grotesque","Segoe UI",system-ui,sans-serif}
+main{max-width:640px;margin:0 auto;padding:56px 20px 32px}
+h1{font-size:clamp(2.1rem,7vw,3.2rem);line-height:1.05;margin:0 0 14px;letter-spacing:-.03em}
+.lead{color:var(--muted);margin:0 0 32px;max-width:46ch}
+.box{display:flex;gap:10px;flex-wrap:wrap}
+input{flex:1 1 260px;padding:16px 18px;font:inherit;color:var(--ink);background:var(--card);border:2px solid var(--line);border-radius:14px}
+input:focus,button:focus-visible,a:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+button,.dl{padding:16px 26px;font:inherit;font-weight:700;background:var(--accent);color:var(--accent-ink);border:0;border-radius:14px;cursor:pointer;text-decoration:none;display:inline-block}
+button:disabled{opacity:.6;cursor:wait}
+#msg{min-height:1.6em;margin:14px 0 0;color:var(--err)}
+#result{display:none;margin-top:18px;background:var(--card);border:2px solid var(--line);border-radius:18px;overflow:hidden}
+#result.show{display:block}
+#result img{width:100%;max-height:360px;object-fit:cover;display:block;background:var(--line)}
+.meta{padding:18px 20px}
+.meta h2{font-size:1.05rem;margin:0 0 4px}
+.meta p{margin:0 0 16px;color:var(--muted);font-size:.95rem}
+section{margin-top:56px}
+h3{font-size:1.15rem;margin:0 0 8px}
+section p,section li{color:var(--muted)}
+footer{border-top:1px solid var(--line);margin-top:56px;padding-top:20px;font-size:.88rem;color:var(--muted)}
+footer a{color:inherit}
+</style>
+</head>
+<body>
+<main>
+<h1>Save Instagram videos to your phone</h1>
+<p class="lead">Paste the link of a public reel or video. We will give you an MP4 file. No login, no app.</p>
+
+<div class="box">
+  <input id="url" type="url" inputmode="url" placeholder="https://www.instagram.com/reel/..." aria-label="Instagram link" autocomplete="off">
+  <button id="go">Get video</button>
+</div>
+<p id="msg" role="alert"></p>
+
+<div id="result">
+  <img id="thumb" alt="">
+  <div class="meta">
+    <h2 id="title"></h2>
+    <p id="by"></p>
+    <a id="save" class="dl" href="#">Download MP4</a>
+  </div>
+</div>
+
+<section>
+<h3>How to download</h3>
+<ol>
+<li>Open Instagram, tap Share on the reel or video, then Copy link.</li>
+<li>Paste the link in the box above and tap Get video.</li>
+<li>Tap Download MP4. The file is saved to your device.</li>
+</ol>
+</section>
+
+<section>
+<h3>Questions</h3>
+<p><b>Does it work for private accounts?</b> No. Only public posts can be downloaded.</p>
+<p><b>Is it free?</b> Yes.</p>
+<p><b>Can I download anyone's video?</b> Only download content you made or have permission to use. Videos belong to their creators.</p>
+</section>
+
+<footer>
+This site is not affiliated with Instagram or Meta. You are responsible for how you use downloaded content.
+Copyright owners can request removal at <a href="mailto:contact@yourdomain.com">contact@yourdomain.com</a>.
+We do not store videos or link history. <a href="#privacy" onclick="alert('We do not keep the videos you download. Your IP address may be logged briefly to prevent abuse.');return false">Privacy</a>
+</footer>
+</main>
+
+<script>
+const $=id=>document.getElementById(id);
+async function run(){
+  const url=$("url").value.trim(), msg=$("msg"), res=$("result");
+  msg.textContent=""; res.classList.remove("show");
+  if(!url){msg.textContent="Paste an Instagram link first.";return}
+  $("go").disabled=true; $("go").textContent="Fetching…";
+  try{
+    const r=await fetch("/api/info",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({url})});
+    const d=await r.json();
+    if(!r.ok) throw new Error(d.detail||"Something went wrong. Try again.");
+    $("title").textContent=d.title;
+    $("by").textContent=d.uploader?("By "+d.uploader):"";
+    $("thumb").src=d.thumbnail?("https://wsrv.nl/?url="+encodeURIComponent(d.thumbnail)):"";
+    $("save").href="/api/download?url="+encodeURIComponent(url);
+    res.classList.add("show");
+  }catch(e){msg.textContent=e.message}
+  $("go").disabled=false; $("go").textContent="Get video";
+}
+$("go").addEventListener("click",run);
+$("url").addEventListener("keydown",e=>{if(e.key==="Enter")run()});
+</script>
+</body>
+</html>
